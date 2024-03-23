@@ -1,4 +1,4 @@
-import axios, { AxiosInstance, AxiosPromise, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosPromise, AxiosResponse, AxiosRequestConfig } from 'axios';
 import { AxiosAuthRefreshOptions, AxiosAuthRefreshCache } from './model';
 
 export interface CustomAxiosRequestConfig extends AxiosRequestConfig {
@@ -33,33 +33,35 @@ export function mergeOptions(
  * @return {boolean}
  */
 export function shouldInterceptError(
-    error: any,
+    response: AxiosResponse,
     options: AxiosAuthRefreshOptions,
     instance: AxiosInstance,
     cache: AxiosAuthRefreshCache
 ): boolean {
-    if (!error) {
+    if (!response) {
         return false;
     }
 
-    if (error.config?.skipAuthRefresh) {
+    // @ts-ignore
+    if (response.config?.skipAuthRefresh) {
         return false;
     }
 
     if (
-        !(options.interceptNetworkError && !error.response && error.request.status === 0) &&
-        (!error.response ||
+        !(options.interceptNetworkError && !response.data && response.status === 0) &&
+        (!response.data ||
             (options?.shouldRefresh
-                ? !options.shouldRefresh(error)
-                : !options.statusCodes?.includes(parseInt(error.response.status))))
+                ? !options.shouldRefresh(response)
+                : !options.statusCodes?.includes(response.status)))
     ) {
         return false;
     }
 
     // Copy config to response if there's a network error, so config can be modified and used in the retry
-    if (!error.response) {
-        error.response = {
-            config: error.config,
+    if (!response) {
+        response = {
+            ...response,
+            config: response.config,
         };
     }
 

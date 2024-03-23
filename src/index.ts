@@ -44,12 +44,11 @@ export default function createAuthRefreshInterceptor(
     };
 
     return instance.interceptors.response.use(
-        (response: AxiosResponse) => response,
-        (error: any) => {
+        (response: AxiosResponse) => {
             options = mergeOptions(defaultOptions, options);
 
-            if (!shouldInterceptError(error, options, instance, cache)) {
-                return Promise.reject(error);
+            if (!shouldInterceptError(response, options, instance, cache)) {
+                return response;
             }
 
             if (options.pauseInstanceWhileRefreshing) {
@@ -57,15 +56,16 @@ export default function createAuthRefreshInterceptor(
             }
 
             // If refresh call does not exist, create one
-            const refreshing = createRefreshCall(error, refreshAuthCall, cache);
+            const refreshing = createRefreshCall(response, refreshAuthCall, cache);
 
             // Create interceptor that will bind all the others requests until refreshAuthCall is resolved
             createRequestQueueInterceptor(instance, cache, options);
 
             return refreshing
                 .catch((error) => Promise.reject(error))
-                .then(() => resendFailedRequest(error, getRetryInstance(instance, options)))
+                .then(() => resendFailedRequest(response, getRetryInstance(instance, options)))
                 .finally(() => unsetCache(instance, cache));
-        }
+        },
+        (error: any) => error
     );
 }

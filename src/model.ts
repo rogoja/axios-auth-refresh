@@ -1,13 +1,13 @@
-import { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios';
+import { AxiosResponse, AxiosInstance, AxiosRequestConfig } from 'axios';
 
 export interface AxiosAuthRefreshOptions {
     statusCodes?: Array<number>;
     /**
      * Determine whether to refresh, if "shouldRefresh" is configured, The "statusCodes" logic will be ignored
-     * @param error AxiosError
+     * @param response AxiosResponse
      * @returns boolean
      */
-    shouldRefresh?(error: AxiosError): boolean;
+    shouldRefresh?(response: AxiosResponse): boolean;
     retryInstance?: AxiosInstance;
     interceptNetworkError?: boolean;
     pauseInstanceWhileRefreshing?: boolean;
